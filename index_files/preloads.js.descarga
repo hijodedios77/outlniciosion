@@ -1,0 +1,72 @@
+
+    (function() {
+      var baseURL = "https://cdn.shopify.com/shopifycloud/checkout-web/assets/";
+      var scripts = ["https://cdn.shopify.com/shopifycloud/checkout-web/assets/runtime.latest.es.3a0b755e0fb5a5e99319.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/5835.latest.es.6d90f9ef17e5a7215238.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/3569.latest.es.9864dca70239bbd6697a.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/4085.latest.es.d3bc65d7a91c6d71a13d.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/app.latest.es.562b158680941e897a22.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/2542.latest.es.e8b98a9ed829efc0c730.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/6846.latest.es.52b14d870951c1a5a741.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/8070.latest.es.8ff27283522475e94436.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/2080.latest.es.5117e670600bcaf49bb5.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/8933.latest.es.a8bb5aac9cacd4f88feb.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/9962.latest.es.1e3acce4aea963b302d3.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/5137.latest.es.4e33cdd3f24eb5258674.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/2594.latest.es.148977b3e8abcb8c2dc0.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/5449.latest.es.2711b599719008b4c34a.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/OnePage.latest.es.ed75497b6702361d9a5f.js"];
+      var styles = ["https://cdn.shopify.com/shopifycloud/checkout-web/assets/5835.latest.es.3975c63f818b50435dd4.css","https://cdn.shopify.com/shopifycloud/checkout-web/assets/app.latest.es.19558d19ece777c39c33.css","https://cdn.shopify.com/shopifycloud/checkout-web/assets/6268.latest.es.8039276cabb7faecfb04.css"];
+      var fontPreconnectUrls = [];
+      var fontPrefetchUrls = [];
+      var imgPrefetchUrls = ["https://cdn.shopify.com/s/files/1/1407/6980/files/BUNA_x320.png?v=1624389573"];
+
+      function preconnect(url, callback) {
+        var link = document.createElement('link');
+        link.rel = 'dns-prefetch preconnect';
+        link.href = url;
+        link.crossOrigin = '';
+        link.onload = link.onerror = callback;
+        document.head.appendChild(link);
+      }
+
+      function preconnectAssets() {
+        var resources = [baseURL].concat(fontPreconnectUrls);
+        var index = 0;
+        (function next() {
+          var res = resources[index++];
+          if (res) preconnect(res, next);
+        })();
+      }
+
+      function prefetch(url, as, callback) {
+        var link = document.createElement('link');
+        if (link.relList.supports('prefetch')) {
+          link.rel = 'prefetch';
+          link.fetchPriority = 'low';
+          link.as = as;
+          if (as === 'font') link.type = 'font/woff2';
+          link.href = url;
+          link.crossOrigin = '';
+          link.onload = link.onerror = callback;
+          document.head.appendChild(link);
+        } else {
+          var xhr = new XMLHttpRequest();
+          xhr.open('GET', url, true);
+          xhr.onloadend = callback;
+          xhr.send();
+        }
+      }
+
+      function prefetchAssets() {
+        var resources = [].concat(
+          scripts.map(function(url) { return [url, 'script']; }),
+          styles.map(function(url) { return [url, 'style']; }),
+          fontPrefetchUrls.map(function(url) { return [url, 'font']; }),
+          imgPrefetchUrls.map(function(url) { return [url, 'image']; })
+        );
+        var index = 0;
+        (function next() {
+          var res = resources[index++];
+          if (res) prefetch(res[0], res[1], next);
+        })();
+      }
+
+      function onLoaded() {
+        preconnectAssets();
+        prefetchAssets();
+      }
+
+      if (document.readyState === 'complete') {
+        onLoaded();
+      } else {
+        addEventListener('load', onLoaded);
+      }
+    })();
+  

@@ -1,0 +1,231 @@
+let subscriptionPlansElements=[],subscriptionSelected=[],subscriptionNewProducts=[],subscriptionEditions={};const setEdition=(element,subscriptionId,action,quantity,plan,object)=>{if(subscriptionSelected=subscriptionSelected.length?subscriptionSelected:subscriptionPlansElements.length?subscriptionPlansElements.filter(subs=>subs.subscriptionId===subscriptionId):[],subscriptionSelected.length&&Number(quantity)){subscriptionSelected=subscriptionSelected.map(item=>{let newQuantity=item.quantity;return item.plan===plan&&(action==="remove"?newQuantity=0:newQuantity=Number(quantity)),{...item,quantity:newQuantity}});const total=subscriptionSelected.map(subs=>(Number(subs.variant.price)||0)*subs.quantity).reduce((a,b)=>a+b);$("#modal-product-list").parent().find(".product__total").html(`<h6>Subtotal: $${total}</h6>`),action==="remove"&&$(element).parent().parent().remove(),subscriptionEditions[plan]={action,quantity:Number(quantity),plan,object}}console.log("setEdition",subscriptionEditions)},setModalEditBody=subscriptionId=>{subscriptionEditions={},subscriptionSelected=[];const subscription=subscriptionPlansElements.length?subscriptionPlansElements.filter(subs=>subs.subscriptionId===subscriptionId):[];if(subscription.length){const modalBody=subscription.map(subs=>{const{object,price:plan,productTitle,quantity,subscriptionId:subscriptionId2,variant:{option2,option3,price,avatar}}=subs;return`<div class="row">
+        <div class="product-list__col-figure col-md-2 col-3">
+          <figure class="product-list__figure">
+            <img src="${avatar}">
+          </figure>
+        </div>
+        <div class="col-md-8 col-6">
+          <article class="product-list__article">
+            <h6>${productTitle}</h6>
+            <p>
+              <strong>$${price}</strong>. 
+              <span class="product-list__option-span">${option2||""}</span> <span class="product-list__option-span">${option3||""}</span>
+            </p>
+          </article>
+          <div class="tag__controls">
+            <button type="button" class="tag__controls-less minus">
+              <span class="material-icons-outlined">remove</span>
+            </button>
+            <input type="number" placeholder="0" class="product__input" value="${quantity}" 
+          onChange="setEdition(this, '${subscriptionId2}', 'quantity', this.value, '${plan}', '${object}')">
+          <button type="button" class="tag__controls-plus plus">
+            <span class="material-icons-outlined">add</span>
+          </button>
+          </div>
+        </div>
+        <div class="product-list__col-action col-md-2 col-3">
+          <button type="button" class="btn btn--danger btn--small" data-subsId="${subscriptionId2}" onClick="setEdition(this, '${subscriptionId2}', 'remove', ${quantity}, '${plan}', '${object}')">Eliminar</button>
+        </div>
+      </div>`}),total=subscription.map(subs=>(Number(subs.variant.price)||0)*subs.quantity).reduce((a,b)=>a+b);$("#modal-product-list").html(modalBody.join(" ")),$("#modal-product-list").parent().find(".product__total").html(`<h6>Subtotal: $${total}</h6>`)}console.log("setModalEditBody",{subscription})},addMoreProducts=element=>{const id=$(element).data("id"),object=$(element).data("object"),recurrencia=subscriptionPlansElements.filter(subs=>subs.subscriptionId===id)[0].recurrencia;console.log("addMoreProducts",{id,object});var settings={url:"https://ccdty9w3f9.execute-api.us-east-1.amazonaws.com/dev/shopify/products",method:"POST",timeout:0,headers:{"Content-Type":"application/json"},data:JSON.stringify({ids:[4428252119110,4448267665478,4428219744326,4694468034630,4694453977158,4428211126342,4448279461958,4464328671302,6822800457798,6822795182150,6822793347142]})};$.ajax(settings).done(function(response){console.log(response);const{products}=response,productList=[];products.forEach(product=>{const{id:id2,image,images,title,variants}=product;variants.forEach(variant=>{const{id:variantId,price,image_id,option2,option3}=variant,foundedImage=images.filter(image2=>image2.id===image_id);productList.push({value:`${variantId}`,name:`${title} ${option2?`/ ${option2}`:""} ${option3?` / ${option3}`:""}`,avatar:foundedImage.length?foundedImage[0].src:image,price,productId:`${id2}`})})}),console.log("productList",productList);const inputElm=document.querySelector("input[name=tags]"),tagify=new Tagify(inputElm,{tagTextProp:"name",enforceWhitelist:!0,skipInvalid:!0,dropdown:{closeOnSelect:!0,enabled:0,maxItems:50,classname:"users-list",searchKeys:["name","price","tipo","peso"]},templates:{tag:function(tagData){return`<tag title="${tagData.title||tagData.price}"
+            contenteditable='false'
+            spellcheck='false'
+            tabIndex="-1"
+            class="${this.settings.classNames.tag} ${tagData.class?tagData.class:""}"
+            ${this.getAttributes(tagData)}
+          >
+            <x title='' class='tagify__tag__removeBtn' role='button' aria-label='remove tag'></x>
+            <div>
+              <div class='tagify__tag__avatar-wrap'>
+                <img onerror="this.style.visibility='hidden'" src="${tagData.avatar}">
+              </div>
+              <span class='tagify__tag-text'>${tagData.name}</span>
+            </div>
+          </tag>`},dropdownItem:function(tagData){return`<div ${this.getAttributes(tagData)}
+            class='tagify__dropdown__item ${tagData.class?tagData.class:""}'
+            tabindex="0"
+            role="option"
+          >
+            ${tagData.avatar?`<div class='tagify__tag__avatar-wrap' style="width:20%"><img onerror="this.style.visibility='hidden'" src="${tagData.avatar}"></div>`:""}
+            <strong>${tagData.name}</strong>
+            <span>${tagData.price}</span>
+          </div>`}},whitelist:productList});tagify.on("dropdown:show dropdown:updated",e=>{var dropdownContentElm=e.detail.tagify.DOM.dropdown.content;tagify.suggestedListItems.length>1&&(addAllSuggestionsElm=()=>tagify.parseTemplate("dropdownItem",[{class:"addAll",name:"A\xF1adir todos",price:tagify.settings.whitelist.reduce(function(remainingSuggestions,item){return tagify.isTagDuplicate(item.value)?remainingSuggestions:remainingSuggestions+1},0)+" Productos"}]),dropdownContentElm.insertBefore(addAllSuggestionsElm,dropdownContentElm.firstChild))}),tagify.on("dropdown:select",e=>{const{detail:{data:{value:variantId,productId,price,avatar,name}}}=e;if(!!!subscriptionNewProducts.filter(product=>product.variantId===variantId).length){subscriptionNewProducts.push({object,action:"addNew",productId,variantId,recurrencia,avatar,name,quantity:1,price:Number(price)});const total=subscriptionNewProducts.map(product=>product.price).reduce((a,b)=>a+b);$("#modal-addmore").find(".product__total").html(`<h6>Total adicional: $${total}</h6>`),showNewProducts()}console.log("dropdown:select",subscriptionNewProducts),e.detail.elm==addAllSuggestionsElm&&tagify.dropdown.selectAll.call(tagify)}),tagify.on("remove",e=>{const{detail:{data:{value}}}=e;if(value){subscriptionNewProducts=subscriptionNewProducts.filter(product=>product.variantId!==value);const total=subscriptionNewProducts.length?subscriptionNewProducts.map(product=>product.price).reduce((a,b)=>a+b):0;$("#modal-addmore").find(".product__total").html(`<h6>Total adicional: $${total}</h6>`),showNewProducts()}console.log("remove",subscriptionNewProducts)})})},showNewProducts=()=>{if(subscriptionNewProducts.length){const selectionHtml=subscriptionNewProducts.map(product=>{const{productId,variantId,avatar,name,price,quantity}=product;return`<div class="row">
+        <div class="product-list__col-figure col-3">
+          <figure class="product-list__figure">
+            <img src="${avatar}">
+          </figure>
+        </div>
+        <div class="col-9">
+          <article class="product-list__article">
+            <h6>${name}</h6>
+            <p><strong>$${price}</strong>.</p>
+          </article>
+          <div class="tag__controls">
+            <button type="button" class="tag__controls-less minus">
+              <span class="material-icons-outlined">remove</span>
+            </button>
+            <input type="number" placeholder="0" class="product__input" value="${quantity}" 
+            onchange="editNewProducts(this, '${productId}', '${variantId}')"
+          >
+          <button type="button" class="tag__controls-plus plus">
+            <span class="material-icons-outlined">add</span>
+          </button>
+          </div>
+          
+        </div>
+      </div>`});$(".product-list").html(selectionHtml.join(" "))}},editNewProducts=(element,selectedProductId,selectedVariantId)=>{const newQuantity=$(element).val();subscriptionNewProducts=subscriptionNewProducts.map(product=>{const{productId,variantId}=product;return productId===selectedProductId&&variantId===selectedVariantId?{...product,quantity:Number(newQuantity)||1}:product}),console.log(subscriptionNewProducts)},saveNewProducts=element=>{const id=$(element).data("id");if(console.log("saveNewProducts",{id}),subscriptionNewProducts.length)Swal.fire({title:"\xBFEst\xE1s seguro que deseas a\xF1adir estos productos a tu suscripci\xF3n?",text:"Podr\xE1s cambiar de opini\xF3n en el momento que quieras",icon:"question",showCancelButton:!0,confirmButtonText:"Si, a\xF1adir",cancelButtonText:"No, no deseo a\xF1adir"}).then(result=>{if(result.isConfirmed)return $.ajax({url:`https://ccdty9w3f9.execute-api.us-east-1.amazonaws.com/dev/stripe/update/${id}`,method:"POST",data:JSON.stringify(subscriptionNewProducts),dataType:"json",contentType:"application/json",beforeSend:()=>{Swal.showLoading()},success:resp=>(setTimeout(()=>{window.location.reload()},2e3),Swal.fire("Finalizado","La suscripci\xF3n ha sido editada.","success"))})});else return Swal.fire("Oops!","Selecciona uno o m\xE1s productos.","warning")};var DOMfunction=function(){if($(".suscriptions--v2").size()>0){const saveEdition=()=>{const subscriptionId=subscriptionSelected.length?subscriptionSelected[0].subscriptionId:"";if(subscriptionId&&Object.keys(subscriptionEditions).length){const actions=Object.keys(subscriptionEditions).map(item=>{const actionToSend=subscriptionEditions[item],{object,plan,action,quantity}=actionToSend;return action==="remove"?{object,action,plan}:{object,action,plan,quantity}});Swal.fire({title:"\xBFEst\xE1s seguro que deseas editar tu suscripci\xF3n?",text:"Podr\xE1s cambiar de opini\xF3n en el momento que quieras",icon:"question",showCancelButton:!0,confirmButtonText:"Si, editar",cancelButtonText:"No, no deseo editar"}).then(result=>{if(result.isConfirmed)return $.ajax({url:`https://ccdty9w3f9.execute-api.us-east-1.amazonaws.com/dev/stripe/update/${subscriptionId}`,method:"POST",data:JSON.stringify(actions),dataType:"json",contentType:"application/json",beforeSend:()=>{Swal.showLoading()},success:resp=>(setTimeout(()=>{window.location.reload()},2e3),Swal.fire("Finalizado","La suscripci\xF3n ha sido editada.","success"))})}),console.log("saveEdition",{subscriptionId,actions})}else return Swal.fire("Oops!","Por favor edita al menos un elemento en tu suscripci\xF3n.","warning")};$("body").delegate("#saveEdition","click",saveEdition);var cancelSuscription=function(){const id=$(this).data("id"),object=$(this).data("object");Swal.fire({title:"\xBFEstas seguro que deseas cancelar tu suscripci\xF3n?",text:"Ya no recibir\xE1s m\xE1s este producto.",icon:"warning",showCancelButton:!0,confirmButtonText:"Si, cancelar",cancelButtonText:"No, no deseo cancelar"}).then(result=>{if(result.isConfirmed)return $.ajax({url:`https://ccdty9w3f9.execute-api.us-east-1.amazonaws.com/dev/stripe/cancel/${id}`,method:"POST",data:JSON.stringify({object}),dataType:"json",contentType:"application/json",success:resp=>(setTimeout(()=>{window.location.reload()},2e3),Swal.fire("Finalizado","La suscripci\xF3n ha sido cancelada.","success"))})})};$("body").delegate(".js-cancel","click",cancelSuscription);var pauseSuscription=function(){const id=$(this).data("id"),object=$(this).data("object"),paused=$(this).data("ispaused");Swal.fire({title:`\xBFEstas seguro que deseas ${paused?"activar":"pausar"} tu suscripci\xF3n?`,text:paused?"Volver\xE1s a recibir el producto en tu siguiente cargo.":"Ya no recibir\xE1s m\xE1s este producto.",icon:"warning",showCancelButton:!0,confirmButtonText:`Si, ${paused?"activar":"pausar"}`,cancelButtonText:`No, no deseo ${paused?"activar":"pausar"}`}).then(result=>{if(result.isConfirmed)return $.ajax({url:`https://ccdty9w3f9.execute-api.us-east-1.amazonaws.com/dev/stripe/update/${id}`,method:"POST",data:JSON.stringify({object,action:paused?"unpause":"pause"}),dataType:"json",contentType:"application/json",success:resp=>(setTimeout(()=>{window.location.reload()},2e3),Swal.fire("Finalizado",paused?"La suscripci\xF3n ha sido activada.":"La suscripci\xF3n ha sido pausada.","success"))})})};$("body").delegate(".js-pause","click",pauseSuscription);var reaundarSuscription=function(){const id=$(this).data("id"),object=$(this).data("object");Swal.fire({title:"\xBFEstas seguro que deseas reanudar tu suscripci\xF3n?",text:"Se te volver\xE1n a hacer cargos correspondientes a tus productos activos.",icon:"warning",showCancelButton:!0,confirmButtonText:"Si, reaundar",cancelButtonText:"No, no deseo reanudar"}).then(result=>{if(result.isConfirmed)return $.ajax({url:`https://ccdty9w3f9.execute-api.us-east-1.amazonaws.com/dev/stripe/pause/${id}`,method:"POST",data:JSON.stringify({object:"subscription",action:"unpause"}),dataType:"json",contentType:"application/json",success:resp=>(setTimeout(()=>{window.location.reload()},2e3),Swal.fire("Finalizado","La suscripci\xF3n ha sido reanudada.","success"))})})};$("body").delegate(".js-reanudar","click",reaundarSuscription);var openModal=function(e){e.preventDefault();var dataTarget=$(this).attr("data-target"),toOpen=$('*[id="'+dataTarget+'"]');$("body").find(toOpen).addClass("active");const id=$(this).data("id"),object=$(this).data("object");$(".js-send-object").data("id",id),$(".js-send-object").data("object",object)};$("body").delegate(".js-open-modal","click",openModal);var closeModal=function(e){e.preventDefault(),$(".modal-lightbox").removeClass("active")};$("body").delegate(".js-close-modal","click",closeModal);var recurrencySuscription=function(){var $this=$(this).val();console.log($this),$("#recurrency-change").val($this)};$("body").delegate(".js-recurrency-change","click",recurrencySuscription);var recurrencySendSuscription=function(){const idNew=$(this).data("id"),objectNew=$(this).data("object");$(".modal-lightbox").removeClass("active");var recurrency=$("#recurrency-change").val();if(console.log("CAMBIO RECURRENCIA MESSAGE --",objectNew),objectNew=="subscription")var textBody=`
+          <p>Al hacerlo, cancelaremos tu suscripci\xF3n actual y crearemos una nueva, realizando el cobro inicial del periodo en este momento.</p>
+          <p>Te recomendamos hacer este cambio el \xFAltimo d\xEDa antes del cobro de tu suscripci\xF3n actual ;)</p>          
+          `;else var textBody="Al hacer este cambio, se aplicar\xE1 para tu siguiente corte de recurrencia.";Swal.fire({title:"\xBFEst\xE1s seguro de querer cambiar tu recurrencia?",html:textBody,icon:"warning",showCancelButton:!0,confirmButtonText:"S\xED, cambiar",cancelButtonText:"No, no cambiar"}).then(result=>{if(result.isConfirmed)return $.ajax({url:`https://ccdty9w3f9.execute-api.us-east-1.amazonaws.com/dev/stripe/update/${idNew}`,method:"POST",data:JSON.stringify({object:objectNew,action:"recurrencia",recurrencia:recurrency}),dataType:"json",contentType:"application/json",success:resp=>(setTimeout(()=>{window.location.reload()},2e3),Swal.fire("Finalizado","La suscripci\xF3n ha sido actualizada.","success"))})})};$("body").delegate(".js-send-recurrency","click",recurrencySendSuscription);var collapseClick=function(){$(this).toggleClass("active"),$(this).parents(".collapsable").find(".collapsable__contain-wrapp").stop().slideToggle()};$("body").delegate(".js-collapse .icon","click",collapseClick),$("body").delegate(".js-edit-payment","click",function(e){e.preventDefault();const customer=$(this).data("customer");Swal.fire({title:"Cargando...",html:"Estamos cargando tus m\xE9todos de pago",allowOutsideClick:!1,allowEscapeKey:!1,allowEnterKey:!1,showConfirmButton:!1,didOpen:()=>{Swal.showLoading(),$.ajax({url:"https://ccdty9w3f9.execute-api.us-east-1.amazonaws.com/dev/stripe/billing-portal",method:"POST",data:JSON.stringify({customer}),dataType:"json",contentType:"application/json",success:resp=>{const{result}=resp;window.location.href=result.url}})}})});const userId=$("#userId").val();userId!==""&&$.ajax({url:`https://ccdty9w3f9.execute-api.us-east-1.amazonaws.com/dev/shopify/${userId}/subscription`,method:"GET",success:resp=>{if(resp!==""&&resp.result!=="Not customer found"&&resp.subscriptionPlans.length!==0){let removeDuplicates2=function(data,key){return[...new Map(data.map(item=>[key(item),item])).values()]};var removeDuplicates=removeDuplicates2;console.log(resp),setTimeout(function(){$(".suscription__loader").addClass("hide"),$(".row--active").removeClass("hide")},1e3),setTimeout(function(){var collapsePrice=function(){var sum=0;$(this).find(".suscription-product-price").each(function(){var pricesSumOrigin=$(this).attr("data-price"),priceQty=$(this).parents("table").find(".suscription-product-qty").attr("data-qty"),newPrice=pricesSumOrigin*priceQty;console.log("PRECIO UNITARIO ---",newPrice),sum+=parseFloat(newPrice)});function moneyFormat(price,sign="$"){const pieces=parseFloat(price).toFixed(2).split("");let ii=pieces.length-3;for(;(ii-=3)>0;)pieces.splice(ii,0,",");return sign+pieces.join("")}console.log(moneyFormat(sum)),$(this).find(".subtotal-suscription").text(moneyFormat(sum));const shipping=$(this).find(".shipping-suscription").data("price"),discount=sum*.15,total=sum-discount+shipping;$(this).find(".discount-suscription").text(`-${moneyFormat(discount)}`),$(this).find(".total-suscription").text(moneyFormat(total))};$(".collapsable").each(collapsePrice)},2500);var suscriptionPlan=resp.subscriptionPlans;let shippingRateName="",shippingRatePrice="";if(subscriptionPlansElements=resp.subscriptionPlans,suscriptionPlan.length){console.log(suscriptionPlan.length);const{paymentMethods,customer,shippingRate}=suscriptionPlan[0];if(shippingRateName=shippingRate.display_name||"",shippingRatePrice=shippingRate.fixed_amount.amount||"0",shippingRatePrice=(Number(shippingRatePrice)/100).toFixed(2),paymentMethods.length){const paymentMethodsBody=paymentMethods.map(paymentMethod=>{const{brand,last4}=paymentMethod;return`<div class="suscription__element">
+                      <p class="suscription__address">${brand.toUpperCase()}-xxxx-xxxx-xxxx-${last4}</p>
+                      <!-- <a href="#">Editar</a> -->
+                  </div>`}).join(" ");$("#paymentMethods").append(`
+                  ${paymentMethodsBody}
+                  <div class="suscription__element">
+                    <a href="#" class="suscription__add js-edit-payment" data-customer="${customer}">Editar</a>
+                  </div>
+                `),$("#paymentMethods").removeClass("hide")}}suscriptionPlan.map(index=>{var suscriptionIndex=index,suscriptionImage=index.variant.avatar,suscriptionRecurrencia=index.recurrencia,suscriptionSubscriptionId=index.subscriptionId,suscriptionSlice=suscriptionSubscriptionId.substr(suscriptionSubscriptionId.length-5),suscriptionTitle=index.productTitle,suscriptionSize=index.variant.option2,suscriptionType=index.variant.option3,suscriptionPrice=index.variant.price,suscriptionQuantity=index.quantity,subscriptionObject=index.object,nextBuy=index.formatEndDate,bodyItem=`
+                  <div class="suscription__item" data-id="${suscriptionSlice}">
+                      <!-- Item product -->
+                      <div class="suscription__span row">
+                      
+                      <div class="col-md-4">
+                          <figure class="suscription__image">
+                          <img src="${suscriptionImage}">
+                      </figure>
+                      </div>
+                      <div class="suscription__data col-md-8">
+                          <h6>${suscriptionTitle}</h6>
+                          <article>
+                          <table>
+                              <tbody>
+                                  <tr>
+                                      <td>
+                                          <p>
+                                          <strong>Precio</strong>
+                                          </p>
+                                      </td>
+                                      <td>
+                                          <p class="suscription-product-price" data-price="${suscriptionPrice}">$${suscriptionPrice}</p>
+                                      </td>
+                                  </tr>
+                                  <tr data-table="${suscriptionSize}">
+                                      <td>
+                                          <p>
+                                          <strong>Tama\xF1o</strong>
+                                          </p>
+                                      </td>
+                                      <td>
+                                          <p>${suscriptionSize}</p>
+                                      </td>
+                                  </tr>
+                                  <tr>
+                                      <td>
+                                          <p>
+                                          <strong>Cantidad</strong>
+                                          </p>
+                                      </td>
+                                      <td>
+                                          <p class="suscription-product-qty" data-qty="${suscriptionQuantity}">${suscriptionQuantity}</p>
+                                      </td>
+                                  </tr>
+                                  <tr data-table="${suscriptionSize}">
+                                      <td>
+                                          <p>
+                                            <strong>Presentaci\xF3n</strong>
+                                          </p>
+                                      </td>
+                                      <td>
+                                          <p>${suscriptionType}</p>
+                                      </td>
+                                  </tr>
+                                  <tr>
+                                      <td>
+                                          <p>
+                                          <strong>Siguiente cargo</strong>
+                                          </p>
+                                      </td>
+                                      <td>
+                                          <p><strong>${nextBuy}</strong></p>
+                                      </td>
+                                  </tr>
+                              </tbody>
+                          </table>
+                          </article>
+                      </div>
+                      </div>
+                  </div>
+              `;$(".suscription__list").append(bodyItem)});var duplicateClean=removeDuplicates2(suscriptionPlan,item=>item.subscriptionId);console.log(duplicateClean),duplicateClean.forEach(function(item){console.log(item.subscriptionId);var resultIdContain=item.subscriptionId,resultIdContainSlice=resultIdContain.substr(resultIdContain.length-5),resultIdContainRecurrencia=item.recurrencia,resultIdContainObject=item.object;console.log(resultIdContainSlice);var suscriptionPause=item.object,suscriptionUnPause=item.paused;console.log("Tipo de suscripci\xF3n "+suscriptionPause),console.log("Reaundar suscripci\xF3n "+suscriptionUnPause);const{paused}=item;var newBody=`
+                <section class="collapsable" data-contain="${resultIdContainSlice}">
+                    <div class="suscription__span row collapsable--top js-collapse">
+                      <div class="suscription__id col-12 col-reset">
+                          <h5>
+                            No. Suscripci\xF3n: <span> ${resultIdContainSlice}</span>
+                          </h5>
+                          <span class="material-icons-outlined icon active">keyboard_arrow_down</span>
+                      </div>
+                      <div class="suscription__time col-12 col-reset">
+                          <p>
+                            <strong>Tipo de recurrencia: ${resultIdContainRecurrencia.split("-").join(" ")}</strong> 
+                            <a href="#"
+                              class="js-open-modal ${paused?"hidden":""}"
+                              data-id="${resultIdContain}"
+                              data-object="${resultIdContainObject}"
+                              data-target="modal-recurrency"
+                            >Cambiar recurrencia</a>
+                          </p>
+                      </div>
+                      <div class="suscription__counter"> 
+                          <p class="badge badge--counter"></p>
+                          <p class="badge badge--type" data-suscription="${suscriptionPause}" data-ispaused="${paused}">Suscripci\xF3n programada</p>
+                        
+                      </div>
+                    </div>
+                    <div class="collapsable__contain-wrapp" style="display: block;">
+                      <div class="collapsable__edit">
+                        <a href="#" class="btn btn--type3 btn--small btn--icon js-open-modal" data-id="${resultIdContain}" data-object="${resultIdContainObject}" data-target="modal-addmore" onClick="addMoreProducts(this)"><span class="material-icons-outlined icon">add </span> A\xF1adir <span class="btn__hide-suscription">productos</span></a>
+                        <a href="#" class="btn btn--type3 btn--small js-open-modal btn--icon btn--gray" data-id="${resultIdContain}" data-object="${resultIdContainObject}" data-target="modal-edit" onClick="setModalEditBody('${resultIdContain}')"><span class="material-icons-outlined icon">mode </span>  Editar <span class="btn__hide-suscription">suscripci\xF3n</span></a>
+                      </div>
+                      <div class="collapsable__contain-wrapp--inner" data-contain="${resultIdContainSlice}">
+                      </div>
+                      <div class="collapsable__total">
+                        <h6>Subtotal: <span class="subtotal-suscription"></span></h6>
+                      </div>
+                      <div class="collapsable__total">
+                        <h6>Descuento por membres\xEDa (15% off): <span class="discount-suscription"></span></h6>
+                      </div>
+                      <div class="collapsable__total">
+                        <h6>Gastos de env\xEDo (${shippingRateName}): <span class="shipping-suscription" data-price="${Number(shippingRatePrice)}">$${shippingRatePrice}</span></h6>
+                      </div>
+                      <div class="collapsable__total">
+                        <h6>Total: <span class="total-suscription"></span></h6>
+                      </div>
+                      <div class="collapsable__bottom">
+                        <div class="suscription-cancel-actions">
+                          <button
+                          type="button"
+                          class="js-cancel cancel-suscription"
+                          data-id="${resultIdContain}"
+                          data-object="${resultIdContainObject}">Cancelar Suscripci\xF3n</button>
+                          <button
+                          type="button"
+                          class="js-pause pause-suscription hide"
+                          data-id="${resultIdContain}"
+                          data-object="${resultIdContainObject}"
+                          data-suscription="${suscriptionPause}"
+                          data-ispaused="${paused}">
+                            ${paused?"Activar":"Pausar"} Suscripci\xF3n
+                          </button>
+                          <button
+                            type="button"
+                            class="js-reaundar pause-suscription hide"
+                            data-id="${resultIdContain}"
+                            data-object="${resultIdContainObject}"
+                            data-unpause="${suscriptionUnPause}"
+                            >Reanudar Suscripci\xF3n</button>
+                        </div>
+                        
+                      </div>
+                    </div>
+                  </section>
+              `;$(".suscription__list").append(newBody),$("[data-id]").each(function(){var group=$(this).data("id");$(this).appendTo('.collapsable__contain-wrapp--inner[data-contain="'+group+'"]')}),setTimeout(function(){var countProducts=function(){var counter=$(this).find(".suscription__item").size();counter>1?$(this).find(".suscription__counter .badge--counter ").text(counter+" Tipos de Productos"):$(this).find(".suscription__counter .badge--counter ").text(counter+" Tipo de Producto")};$(".collapsable").each(countProducts);var pausarValidation=function(){var $this=$(this);$this.attr("data-suscription")!=="subscription_schedule"&&(console.log("SUSCRIPCI\xD3N PROGRAMADA"),$this.removeClass("hide"))};$(".js-pause").each(pausarValidation);var reanudarValidation=function(){var $this=$(this);$this.attr("data-unpause")==!0?(console.log("SUSCRIPCI\xD3N REAUNDAR"),$this.removeClass("hide")):$this.addClass("hide")};$(".js-reaundar").each(reanudarValidation);var reanudarValidation=function(){var $this=$(this);$this.attr("data-suscription")=="subscription"?$this.attr("data-ispaused")!="true"?($this.addClass("badge--type-active"),$this.text("Suscripci\xF3n activa")):($this.addClass("badge--type-paused"),$this.text("Suscripci\xF3n pausada"),$this.parents(".collapsable").addClass("paused")):($this.addClass("badge--type-soon"),$this.text("Suscripci\xF3n programada"))};$(".badge--type").each(reanudarValidation)},500)})}else console.log(resp),setTimeout(function(){$(".suscription__loader").addClass("hide"),$(".subscription-link").hide(),$(".row--inactive").removeClass("hide")},1e3)},error:resp=>{console.log(resp),setTimeout(function(){$(".suscription__loader").addClass("hide"),$(".subscription-link").hide(),$(".row--inactive").removeClass("hide")},1e3)}}),$(".modal-lightbox").appendTo(".template-page"),$("body").delegate(".minus","click",function(){var $input=$(this).parent().find("input"),count=parseInt($input.val())-1;return count=count<1?1:count,$input.val(count),$input.change(),!1}),$("body").delegate(".plus","click",function(){var $input=$(this).parent().find("input");return $input.val(parseInt($input.val())+1),$input.change(),!1})}};$(document).ready(DOMfunction);
+//# sourceMappingURL=/cdn/shop/t/15/assets/suscription.2.0.js.map?v=38895566947845937171712627416
